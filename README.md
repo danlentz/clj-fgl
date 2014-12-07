@@ -1,6 +1,6 @@
 # clj-fgl
 
-A Clojure library designed to ... well, that part is up to you.
+A Functional Graph Library for Clojure
 
 ## Usage
 
@@ -21,7 +21,7 @@ and _dynamic graph context_.
 ### The Tuple
 
 First, let's get something straight.  When people talk about graphs
-these days, they almost inevitably start talking about nodes.  These
+these days, they almost inevitably start talking about _nodes_.  These
 people are "node centric" thinkers.  They view their data as a set of
 "things" and some of these things may well have various properties.
 Ok. This is a pretty normal way to think about things, and is a
