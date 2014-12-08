@@ -203,9 +203,7 @@
    [p o s] {:+ {[P O] {S (tuple S P O)}}}
    [s p o] {:+ {[S P] {O (tuple S P O)}}}})
 
-(defn add-triple [g [S P O]]
-  "Efficiently add and index a triple to an existing graph, returning a
-  new graph as the result."
+(defn- add-triple [g [S P O]]
   (let [k (keys (indices g))
         p (map (index-triple [S P O]) k)
         o (map (indices g) k)
@@ -213,12 +211,30 @@
     (->Graph (node) n (conj (triples g) (tuple S P O)))))
 
 (defn add-triples [g & more]
-  "Efficiently add and index multiple triples to an existing graph,
+  "Efficiently add and index 0 or more triples to an existing graph,
   returning a new graph as the result."
   (reduce add-triple g more))
 
 ;; (add-triples +NULL+ [:a :b :c] [:a :b :d] [:a :a :a] [:a :a :B])
 ;;  => #<Graph 80dc0041-0476-1196-9bc3-7831c1bbb832 (4 triples)>
+
+
+(defn deindex-triple [[S P O]]
+  {[o s p] {:- {[O S] {P (tuple S P O)}}}
+   [p o s] {:- {[P O] {S (tuple S P O)}}}
+   [s p o] {:- {[S P] {O (tuple S P O)}}}})
+
+(defn- del-triple [g [S P O]]
+  (let [k (keys (indices g))
+        p (map (deindex-triple [S P O]) k)
+        o (map (indices g) k)
+        n (zipmap k (map diff/patch-unchecked o p))]
+    (->Graph (node) n (disj (triples g) (tuple S P O)))))
+
+(defn del-triples [g & more]
+  "Efficiently delete and deindex 0 or more triples to an existing graph,
+  returning a new graph as the result."
+  (reduce del-triple g more))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
