@@ -204,7 +204,8 @@
    [s p o] {:+ {[S P] {O [S P O]}}}})
 
 (defn add-triple [g [S P O]]
-  "Efficiently add and index a triple to an existing graph"
+  "Efficiently add and index a triple to an existing graph, returning a
+  new graph as the result."
   (let [k (keys (indices g))
         p (map (index-triple [S P O]) k)
         o (map (indices g) k)
@@ -212,7 +213,8 @@
     (->Graph (node) n (conj (triples g) [S P O]))))
 
 (defn add-triples [g & more]
-  "Efficiently add and index multiple triples to an existing graph"
+  "Efficiently add and index multiple triples to an existing graph,
+  returning a new graph as the result."
   (reduce add-triple g more))
 
 ;; (add-triples +NULL+ [:a :b :c] [:a :b :d] [:a :a :a] [:a :a :B])
