@@ -203,8 +203,6 @@
    [p o s] {:+ {[P O] {S [S P O]}}}
    [s p o] {:+ {[S P] {O [S P O]}}}})
 
-
-
 (defn add-triple [g [S P O]]
   "Efficiently add and index a triple to an existing graph"
   (let [k (keys (indices g))
@@ -212,6 +210,13 @@
         o (map (indices g) k)
         n (zipmap k (map diff/patch-unchecked o p))]
     (->Graph (node) n (conj (triples g) [S P O]))))
+
+(defn add-triples [g & more]
+  "Efficiently add and index multiple triples to an existing graph"
+  (reduce add-triple g more))
+
+;; (add-triples +NULL+ [:a :b :c] [:a :b :d] [:a :a :a] [:a :a :B])
+;;  => #<Graph 80dc0041-0476-1196-9bc3-7831c1bbb832 (4 triples)>
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
