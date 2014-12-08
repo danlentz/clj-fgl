@@ -207,13 +207,7 @@
         p (map (index-triple [S P O]) k)
         o (map (indices g) k)
         n (zipmap k (map diff/patch-unchecked o p))]
-    (graph
-      (->Graph (node) n (conj (triples g) [S P O])))))
-
-
-
-        
-            
+    (->Graph (node) n (conj (triples g) [S P O]))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
