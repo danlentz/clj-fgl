@@ -199,9 +199,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn index-triple [[S P O]]
-  {[o s p] {:+ {[O S] {P [S P O]}}}
-   [p o s] {:+ {[P O] {S [S P O]}}}
-   [s p o] {:+ {[S P] {O [S P O]}}}})
+  {[o s p] {:+ {[O S] {P (tuple S P O)}}}
+   [p o s] {:+ {[P O] {S (tuple S P O)}}}
+   [s p o] {:+ {[S P] {O (tuple S P O)}}}})
 
 (defn add-triple [g [S P O]]
   "Efficiently add and index a triple to an existing graph, returning a
@@ -210,7 +210,7 @@
         p (map (index-triple [S P O]) k)
         o (map (indices g) k)
         n (zipmap k (map diff/patch-unchecked o p))]
-    (->Graph (node) n (conj (triples g) [S P O]))))
+    (->Graph (node) n (conj (triples g) (tuple S P O)))))
 
 (defn add-triples [g & more]
   "Efficiently add and index multiple triples to an existing graph,
