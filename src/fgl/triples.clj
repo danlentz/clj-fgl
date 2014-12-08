@@ -4,6 +4,7 @@
   (:require [clojure.core.reducers :as r])
   (:require [fgl.util  :as util])
   (:require [fgl.diff  :as diff])
+  (:require [clj-uuid  :as uuid])
   (:use     [clj-tuple]))
 
 
@@ -14,14 +15,14 @@
 (defonce db (atom {}))
 
 
-(defonce -count- (atom 0))
-
-(defn node? [n]
-  (integer? n))
+(defn node? [x]
+  (or (nil? x) (uuid/uuid? x)))
 
 (defn node
-  ([] (swap! -count- inc))
-  ([n] (assert (integer? n)) n))
+  ([]
+     (uuid/v1))
+  ([x]
+     (uuid/the-uuid x)))
 
 ;; note: using boxed aritmatic
 
@@ -186,8 +187,11 @@
                (graph (set this))))
 
 (extend-type nil GraphBuilder
-             (graph [this]
-               (make-graph 0 #{})))
+             (graph [_]
+               (make-graph uuid/+null+ #{})))
+
+(def +null+  uuid/+null+)
+(def +NULL+ (graph +null+))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
