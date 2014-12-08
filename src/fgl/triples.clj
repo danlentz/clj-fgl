@@ -198,7 +198,7 @@
 ;; Incremental Graph (de)Contruction and (de)Indexing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn index-triple [[S P O]]
+(defn- index-triple [[S P O]]
   {[o s p] {:+ {[O S] {P (tuple S P O)}}}
    [p o s] {:+ {[P O] {S (tuple S P O)}}}
    [s p o] {:+ {[S P] {O (tuple S P O)}}}})
@@ -219,7 +219,7 @@
 ;;  => #<Graph 80dc0041-0476-1196-9bc3-7831c1bbb832 (4 triples)>
 
 
-(defn deindex-triple [[S P O]]
+(defn- deindex-triple [[S P O]]
   {[o s p] {:- {[O S] {P (tuple S P O)}}}
    [p o s] {:- {[P O] {S (tuple S P O)}}}
    [s p o] {:- {[S P] {O (tuple S P O)}}}})
