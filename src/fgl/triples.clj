@@ -3,6 +3,7 @@
   (:require [clojure.pprint :as pp])
   (:require [clojure.core.reducers :as r])
   (:require [fgl.util  :as util])
+  (:require [fgl.diff  :as diff])
   (:use     [clj-tuple]))
 
 
@@ -188,6 +189,33 @@
              (graph [this]
                (make-graph 0 #{})))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Incremental Graph Contruction and Indexing
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn index-triple [[S P O]]
+  {[o s p] {:+ {[O S] {P [S P O]}}}
+   [p o s] {:+ {[P O] {S [S P O]}}}
+   [s p o] {:+ {[S P] {O [S P O]}}}})
+
+
+
+(defn add-triple [g [S P O]]
+  "Efficiently add and index a triple to an existing graph"
+  (let [k (keys (indices g))
+        p (map (index-triple [S P O]) k)
+        o (map (indices g) k)
+        n (zipmap k (map diff/patch-unchecked o p))]
+    (graph
+      (->Graph (node) n (conj (triples g) [S P O])))))
+
+
+
+        
+            
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Graph Database and Context
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -210,7 +238,7 @@
      ~@body))
 
 
-;; (assert (= (graph *context*) (graph nil) (graph uuid/+null+)))
+;; (assert (= (graph *context*) (graph nil) (graph 0)))
 
 ;; (graph #{[1 2 3]})
 ;;  => #<Graph 2d1b48b0-723d-1195-8101-7831c1bbb832 (1 triples)>
