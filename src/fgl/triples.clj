@@ -262,7 +262,7 @@
   (reduce del-triple g more))
 
 (defprotocol IncrementalGraphBuilder
-  (& [this triples]
+  (& [this triples]))
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Graph Database and Context
