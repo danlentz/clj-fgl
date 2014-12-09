@@ -171,10 +171,11 @@
 
 (defn make-graph
   ([tuples]
-     (make-graph (node) tuples))
+     (or (@db (set tuples))
+       (make-graph (node) (triples (set tuples)))))
   ([id tuples]
      (assert (node? id))
-     (-> (->Graph id {} tuples)
+     (-> (->Graph id {} (triples (set tuples))
        (add-index s p o)
        (add-index p o s)
        (add-index o s p))))
@@ -224,11 +225,13 @@
    [s p o] {:+ {[S P] {O (tuple S P O)}}}})
 
 (defn- add-triple [g [S P O]]
-  (let [k (keys (indices g))
-        p (map (index-triple [S P O]) k)
-        o (map (indices g) k)
-        n (zipmap k (map diff/patch-unchecked o p))]
-    (->Graph (node) n (conj (triples g) (tuple S P O)))))
+  (let [tups (conj (triples g) (tuple S P O))]
+    (or (@db tups)
+      (let [k (keys (indices g))
+            p (map (index-triple [S P O]) k)
+            o (map (indices g) k)
+            n (zipmap k (map diff/patch-unchecked o p))]
+        (->Graph (node) n tups)))))
 
 (defn add-triples [g & more]
   "Efficiently add and index 0 or more triples to an existing graph,
@@ -245,11 +248,13 @@
    [s p o] {:- {[S P] {O (tuple S P O)}}}})
 
 (defn- del-triple [g [S P O]]
-  (let [k (keys (indices g))
-        p (map (deindex-triple [S P O]) k)
-        o (map (indices g) k)
-        n (zipmap k (map diff/patch-unchecked o p))]
-    (->Graph (node) n (disj (triples g) (tuple S P O)))))
+  (let [tups (disj (triples g) (tuple S P O))]
+    (or (@db tups)
+      (let [k (keys (indices g))
+            p (map (deindex-triple [S P O]) k)
+            o (map (indices g) k)
+            n (zipmap k (map diff/patch-unchecked o p))]
+        (->Graph (node) n tups)))))
 
 (defn del-triples [g & more]
   "Efficiently delete and deindex 0 or more triples from an existing graph,
