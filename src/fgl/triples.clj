@@ -308,10 +308,20 @@
   
 (def ^{:dynamic true} *context* (graph (intern-graph (graph nil))))
 
+
 (extend-type java.util.UUID GraphBuilder
              (graph [this]
                (or (get @db this)
                  +NULL+)))
+
+(extend-type java.util.UUID GraphContainer
+             (id [this]
+               this)
+             (indices [this]
+               (indices (graph this)))
+             (triples [this]
+               (triples (graph this))))
+
 
 (defmacro with-context [designator & body]
   `(binding [*context* (graph (intern-graph
