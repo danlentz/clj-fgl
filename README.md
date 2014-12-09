@@ -89,6 +89,40 @@ about the Graph itself or about other Graphs.
 
 ### Tuple-Store
 
+
+
+fgl.triples> x
+;; => #<Graph b041b850-0478-1196-9bc3-7831c1bbb832 (4 triples)>
+fgl.triples> (triples x)
+;; => #{[:a :b :d] [:a :b :c] [:a :a :a] [:a :a :B]}
+fgl.triples> +null+
+;; => #uuid "00000000-0000-0000-0000-000000000000"
+fgl.triples> +NULL+
+;; => #<Graph 00000000-0000-0000-0000-000000000000 (0 triples)>
+fgl.triples> (graph +null+)
+;; => #<Graph 00000000-0000-0000-0000-000000000000 (0 triples)>
+fgl.triples> (graph nil)
+;; => #<Graph 00000000-0000-0000-0000-000000000000 (0 triples)>
+fgl.triples> (graph +NULL+)
+;; => #<Graph 00000000-0000-0000-0000-000000000000 (0 triples)>
+fgl.triples> (intern-graph (add-triples +NULL+ [:i :am :it]))
+;; => #uuid "ff20a170-04fa-1196-9bc3-7831c1bbb832"
+fgl.triples> (graph *1)
+;; => #<Graph ff20a170-04fa-1196-9bc3-7831c1bbb832 (1 triples)>
+fgl.triples> (add-triples +NULL+ [:i :am :it])
+;; => #<Graph 203bd1e0-04fb-1196-9bc3-7831c1bbb832 (1 triples)>
+fgl.triples> (graph (add-triples +NULL+ [:i :am :it]))
+;; => #<Graph 29e14d60-04fb-1196-9bc3-7831c1bbb832 (1 triples)>
+fgl.triples> (intern-graph (add-triples +NULL+ [:i :am :it]))
+;; => #uuid "ff20a170-04fa-1196-9bc3-7831c1bbb832"
+
+
+(id #{})
+;; => #uuid "00000000-0000-0000-0000-000000000000"
+(triples #{})
+;; => #{}
+
+
 Tuples are stored in Graphs which consist of a set of such tuples
 combined with appropriate indexing to suport generalized query in the
 form of another tuple that may use the special value _nil_ to
