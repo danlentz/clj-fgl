@@ -289,9 +289,10 @@
     (graph nil)
     (reduce merge-graph (first more) (rest more))))
 
-(defprotocol IncrementalGraphBuilder
-  (& [this triples]))
-
+(defn & 
+  "Efficiently merge 0 or more indexed graphs, returning a new indexed graph"
+  [& more]
+  (apply merge-graphs more))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -305,7 +306,7 @@
       (util/returning (id g)
         (swap! db #(into % [[(id g) g] [(triples g) g]]))))))
   
-(def ^{:dynamic true} *context* (intern-graph (graph nil)))
+(def ^{:dynamic true} *context* (graph (intern-graph (graph nil))))
 
 (extend-type java.util.UUID GraphBuilder
              (graph [this]
@@ -313,7 +314,8 @@
                  +NULL+)))
 
 (defmacro with-context [designator & body]
-  `(binding [*context* (intern-graph (graph ~designator))]
+  `(binding [*context* (graph (intern-graph
+                                (& *context* (graph ~designator))))]
      ~@body))
 
 
@@ -426,14 +428,26 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; (select uuid/+null+ [1 2 3])
-;;  => #<Graph 00000000-0000-0000-0000-000000000000 (0 triples)>
+;;   => #<Graph 00000000-0000-0000-0000-000000000000 (0 triples)>
 
 ;; (select (graph #{[1 2 3] [4 5 6]}) [nil nil nil])
 ;;   => #<Graph e9a62310-7238-1195-8101-7831c1bbb832 (2 triples)>    
 
 ;; (with-context #{[1 2 3]}
-;;   (query (graph *context*) 1 2 nil))
+;;   (select +NULL+ [1 2 nil]))
+;;
+;;   => #<Graph 02a6e030-0536-1196-9bc3-7831c1bbb832 (1 triples)>
+
+;; (with-context #{[1 2 3]}
+;;   (triples (select +NULL+ [1 2 nil])))
+;;
 ;;   => #{[1 2 3]}
+
+;; (with-context (graph #{[1 2 4]})
+;;   (with-context #{[1 2 5]} 
+;;     (triples (select +NULL+ [1 2 nil]))))
+;;
+;; => #{[1 2 5] [1 2 4]}
 
 ;; (with-context (select (graph #{[1 2 3] [4 5 6]}) [nil nil nil])
 ;;   (triples (select (graph nil) [nil nil nil])))
