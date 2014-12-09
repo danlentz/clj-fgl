@@ -263,7 +263,29 @@
 
 (defprotocol IncrementalGraphBuilder
   (& [this triples]))
-    
+
+
+(defn- merge-index [g1 g2]
+  (let [g1  (graph g1)
+        g2  (graph g2)
+        k   (keys (indices g1))
+        ix1 (map (indices g1) k)
+        ix2 (map (indices g2) k)
+        ix  (map util/rmerge ix1 ix2)]
+    (zipmap k ix)))
+
+(defn- merge-graph [g1 g2]
+  (let [tups (clojure.set/union (triples g1) (triples g2))]
+    (or (@db tups)
+      (->Graph (node) (merge-index g1 g2) tups))))
+
+(defn merge-graphs
+  "Efficiently merge 0 or more indexed graphs, returning a new indexed graph"
+  [& more]
+  (if-not (seq (map graph more))
+    (graph nil)
+    (reduce merge-graph (first more) (rest more))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Graph Database and Context
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
