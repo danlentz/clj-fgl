@@ -233,9 +233,10 @@
             n (zipmap k (map diff/patch-unchecked o p))]
         (->Graph (node) n tups)))))
 
-(defn add-triples [g & more]
+(defn add-triples 
   "Efficiently add and index 0 or more triples to an existing graph,
   returning a new graph as the result."
+  [g & more]
   (reduce add-triple g more))
 
 ;; (add-triples +NULL+ [:a :b :c] [:a :b :d] [:a :a :a] [:a :a :b])
@@ -256,9 +257,10 @@
             n (zipmap k (map diff/patch-unchecked o p))]
         (->Graph (node) n tups)))))
 
-(defn del-triples [g & more]
+(defn del-triples
   "Efficiently delete and deindex 0 or more triples from an existing graph,
   returning a new graph as the result."
+  [g & more]
   (reduce del-triple g more))
 
 (defprotocol IncrementalGraphBuilder
