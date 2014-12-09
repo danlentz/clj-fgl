@@ -6,6 +6,15 @@
 
 ;;; TODO: test suite
 
+(defn merge*
+  "Recursively merge 0 or more hierarchically nested maps, returning a new
+  map that contains a composite all data."
+  [& maps]
+  (if (every? map? maps)
+    (apply merge-with merge* maps)
+    (last maps)))
+
+
 ;; NOTE: cassius diff algo
 
 (defn diff-inserts

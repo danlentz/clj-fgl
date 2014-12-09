@@ -271,7 +271,7 @@
         k   (keys (indices g1))
         ix1 (map (indices g1) k)
         ix2 (map (indices g2) k)
-        ix  (map util/rmerge ix1 ix2)]
+        ix  (map diff/merge* ix1 ix2)]
     (zipmap k ix)))
 
 (defn- merge-graph [g1 g2]
