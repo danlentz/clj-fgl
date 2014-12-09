@@ -243,6 +243,7 @@
 ;;  => #<Graph 80dc0041-0476-1196-9bc3-7831c1bbb832 (4 triples)>
 
 
+
 (defn- deindex-triple [[S P O]]
   {[o s p] {:- {[O S] {P (tuple S P O)}}}
    [p o s] {:- {[P O] {S (tuple S P O)}}}
@@ -263,8 +264,6 @@
   [g & more]
   (reduce del-triple g more))
 
-(defprotocol IncrementalGraphBuilder
-  (& [this triples]))
 
 
 (defn- merge-index [g1 g2]
@@ -276,10 +275,12 @@
         ix  (map diff/merge* ix1 ix2)]
     (zipmap k ix)))
 
+
 (defn- merge-graph [g1 g2]
   (let [tups (clojure.set/union (triples g1) (triples g2))]
     (or (@db tups)
-      (->Graph (node) (merge-index g1 g2) tups))))
+      (->Graph (node) (merge-index (graph g1) (graph g2)) tups))))
+
 
 (defn merge-graphs
   "Efficiently merge 0 or more indexed graphs, returning a new indexed graph"
@@ -287,6 +288,11 @@
   (if-not (seq (map graph more))
     (graph nil)
     (reduce merge-graph (first more) (rest more))))
+
+(defprotocol IncrementalGraphBuilder
+  (& [this triples]))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Graph Database and Context
@@ -303,7 +309,8 @@
 
 (extend-type java.util.UUID GraphBuilder
              (graph [this]
-               (get @db this)))
+               (or (get @db this)
+                 +NULL+)))
 
 (defmacro with-context [designator & body]
   `(binding [*context* (intern-graph (graph ~designator))]
