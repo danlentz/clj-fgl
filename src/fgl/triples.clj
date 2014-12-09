@@ -86,6 +86,26 @@
   (.write w (str (count (triples g))))
   (.write w " triples)>"))
 
+(extend-type clojure.lang.PersistentHashSet GraphContainer
+             (id [this]
+               (if-let [g (@db this)]
+                 (id g)
+                 (uuid/v4)))
+             (indices [this]
+               (if-let [g (@db this)]
+                 (indices g)
+                 {}))
+             (triples [this]
+               (assert (every? #(= 3 (count %)) this))
+               this))
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Functional Indexing
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 (defn make-index [triples key1 key2 key3]
   (reduce (fn [i0 triple]
@@ -190,8 +210,8 @@
              (graph [_]
                (make-graph uuid/+null+ #{})))
 
-(def +null+  uuid/+null+)
-(def +NULL+ (graph +null+))
+(def +null+ uuid/+null+)
+(def +NULL+ (graph nil))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -215,7 +235,7 @@
   returning a new graph as the result."
   (reduce add-triple g more))
 
-;; (add-triples +NULL+ [:a :b :c] [:a :b :d] [:a :a :a] [:a :a :B])
+;; (add-triples +NULL+ [:a :b :c] [:a :b :d] [:a :a :a] [:a :a :b])
 ;;  => #<Graph 80dc0041-0476-1196-9bc3-7831c1bbb832 (4 triples)>
 
 
@@ -232,11 +252,13 @@
     (->Graph (node) n (disj (triples g) (tuple S P O)))))
 
 (defn del-triples [g & more]
-  "Efficiently delete and deindex 0 or more triples to an existing graph,
+  "Efficiently delete and deindex 0 or more triples from an existing graph,
   returning a new graph as the result."
   (reduce del-triple g more))
 
-
+(defprotocol IncrementalGraphBuilder
+  (& [this triples]
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Graph Database and Context
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
