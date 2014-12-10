@@ -504,6 +504,16 @@
 ;;   => #<Graph 0322eb40-723c-1195-8101-7831c1bbb832 (2 edges)>
 ;;   => #<Graph 0322eb40-723c-1195-8101-7831c1bbb832 (2 edges)>
 
+;; (with-context fido 
+;;   (with-context rdfs
+;;    (map first (edges (select nil [nil :rdf/type :rdfs/Class])))))
+;;
+;;   => (:rdfs/Container :rdfs/Class :rdfs/Literal :rdf/Bag :rdf/List
+;;       :rdfs/ContainerMembershipProperty :rdfs/Datatype :rdfs/Resource
+;;       :rdf/Statement :rdf/Alt :rdf/Seq :rdfs/Property)
+
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Graph Operations
