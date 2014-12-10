@@ -74,7 +74,7 @@
              (id [this]
                (:id this))
              (index [this]
-               (:indexes this))
+               (:index this))
              (edges [this]
                (:edges this)))
 
@@ -224,11 +224,11 @@
    [s p o] {:+ {[S P] {O (edge S P O)}}}})
 
 (defn- add-edge [g [S P O]]
-  (let [tups (conj (edges g) (tuple S P O))]
+  (let [tups (conj (edges g) (edge S P O))]
     (or (@db tups)
-      (let [k (keys (indexes g))
-            p (map (index-triple [S P O]) k)
-            o (map (indexes g) k)
+      (let [k (keys (index g))
+            p (map  (index-edge [S P O]) k)
+            o (map  (index g) k)
             n (zipmap k (map diff/patch-unchecked o p))]
         (->Graph (node) n tups)))))
 
@@ -236,24 +236,25 @@
   "Efficiently add and index 0 or more edges to an existing graph,
   returning a new graph as the result."
   [g & more]
-  (reduce add-triple g more))
+  (reduce add-edge g more))
+
 
 ;; (add-edges +NULL+ [:a :b :c] [:a :b :d] [:a :a :a] [:a :a :b])
 ;;  => #<Graph 80dc0041-0476-1196-9bc3-7831c1bbb832 (4 edges)>
 
 
 
-(defn- deindex-triple [[S P O]]
-  {[o s p] {:- {[O S] {P (tuple S P O)}}}
-   [p o s] {:- {[P O] {S (tuple S P O)}}}
-   [s p o] {:- {[S P] {O (tuple S P O)}}}})
+(defn- deindex-edge [[S P O]]
+  {[o s p] {:- {[O S] {P (edge S P O)}}}
+   [p o s] {:- {[P O] {S (edge S P O)}}}
+   [s p o] {:- {[S P] {O (edge S P O)}}}})
 
-(defn- del-triple [g [S P O]]
-  (let [tups (disj (edges g) (tuple S P O))]
+(defn- del-edge [g [S P O]]
+  (let [tups (disj (edges g) (edge S P O))]
     (or (@db tups)
-      (let [k (keys (indexes g))
-            p (map (deindex-triple [S P O]) k)
-            o (map (indexes g) k)
+      (let [k (keys (index g))
+            p (map (deindex-edge [S P O]) k)
+            o (map (index g) k)
             n (zipmap k (map diff/patch-unchecked o p))]
         (->Graph (node) n tups)))))
 
@@ -261,16 +262,22 @@
   "Efficiently delete and deindex 0 or more edges from an existing graph,
   returning a new graph as the result."
   [g & more]
-  (reduce del-triple g more))
+  (reduce del-edge g more))
 
+;; (del-edges
+;;   (add-edges +NULL+ [:a :b :c] [:a :b :d] [:a :a :a] [:a :a :b])
+;;   [:a :a :a]
+;;   [:a :b :c])
+;;
+;;  => #<Graph 3aef12a0-05cc-1196-9bc3-7831c1bbb832 (2 edges)>
 
 
 (defn- merge-index [g1 g2]
   (let [g1  (graph g1)
         g2  (graph g2)
-        k   (keys (indexes g1))
-        ix1 (map (indexes g1) k)
-        ix2 (map (indexes g2) k)
+        k   (keys (index g1))
+        ix1 (map  (index g1) k)
+        ix2 (map  (index g2) k)
         ix  (map diff/merge* ix1 ix2)]
     (zipmap k ix)))
 
@@ -305,7 +312,7 @@
       (util/returning (id g)
         (swap! db #(into % [[(id g) g] [(edges g) g]]))))))
   
-(def ^{:dynamic true}    *context* (graph (intern-graph (graph nil))))
+(def ^{:dynamic true}    *context* (@db (intern-graph (graph nil))))
 
 (defn current-context [] *context*)
 
@@ -319,8 +326,8 @@
 (extend-type java.util.UUID GraphContainer
              (id [this]
                this)
-             (indexes [this]
-               (indexes (graph this)))
+             (index [this]
+               (index (graph this)))
              (edges [this]
                (edges (graph this))))
 
@@ -334,10 +341,11 @@
   `(binding [*context* +NULL+]
      ~@body))
 
-;; (with-context #{[:fido :isa :dog]}
-;;   (with-context #{[:dog :isa :animal]}
+
+;; (with-context #{[:fido :isa :dog]} 
+;;   (with-context #{[:dog :isa :animal]} 
 ;;     (select +NULL+ [nil :isa nil])))
-;;
+
 ;;  => #<Graph 69b76850-05c5-1196-9bc3-7831c1bbb832 (2 edges)>
 
 ;; (with-context #{[:fido :isa :dog]}
@@ -381,49 +389,48 @@
 
 (defmulti query supplied-constituents)
 
-(defmethod query [Graph false false false] [graph subj pred obj]
-  (edges graph))
+(defmethod query [Graph false false false] [g subj pred obj]
+  (edges g))
 
-
-(defmethod query [Graph true false false]  [graph subj pred obj]
-  (let [i0 ((indexes graph) [s p o])
+(defmethod query [Graph true false false]  [g subj pred obj]
+  (let [i0 ((index g) [s p o])
         i1 (get i0 subj)]
     (set (for [pred (keys i1)
                obj  (keys (get i1 pred))]
            (get-in i1 [pred obj])))))
 
-(defmethod query [Graph false true false]  [graph subj pred obj]
-  (let [i0 ((indexes graph) [p o s])
+(defmethod query [Graph false true false]  [g subj pred obj]
+  (let [i0 ((index g) [p o s])
         i1 (get i0 pred)]
     (set (for [obj  (keys i1)
                subj (keys (get i1 obj))]
            (get-in i1 [obj subj])))))
  
-(defmethod query [Graph false false true]  [graph subj pred obj]
-  (let [i0 ((indexes graph) [o s p])
+(defmethod query [Graph false false true]  [g subj pred obj]
+  (let [i0 ((index g) [o s p])
         i1 (get i0 obj)]
     (set (for [subj (keys i1)
                pred (keys (get i1 subj))]
            (get-in i1 [subj pred])))))
 
-(defmethod query [Graph true true false]  [graph subj pred obj]
-  (let [idx ((indexes graph) [s p o])]
+(defmethod query [Graph true true false]  [g subj pred obj]
+  (let [idx ((index g) [s p o])]
     (set (for [obj (keys (get-in idx [subj pred]))]
-           (tuple subj pred obj)))))
+           (edge subj pred obj)))))
  
-(defmethod query [Graph true false true]  [graph subj pred obj]
-  (let [idx ((indexes graph) [o s p])]
+(defmethod query [Graph true false true]  [g subj pred obj]
+  (let [idx ((index g) [o s p])]
     (set (for [pred (keys (get-in idx [obj subj]))]
-           (tuple subj pred obj)))))
+           (edge subj pred obj)))))
   
-(defmethod query [Graph false true true]  [graph subj pred obj]
-  (let [idx ((indexes graph) [p o s])]
+(defmethod query [Graph false true true]  [g subj pred obj]
+  (let [idx ((index g) [p o s])]
     (set (for [subj (keys (get-in idx [pred obj]))]
-           (tuple subj pred obj)))))
+           (edge subj pred obj)))))
  
-(defmethod query [Graph true true true]   [graph subj pred obj]
+(defmethod query [Graph true true true]   [g subj pred obj]
   (set (filter identity
-         (vector ((edges graph) [subj pred obj])))))
+         (vector ((edges g) [subj pred obj])))))
 
 
 
@@ -432,25 +439,26 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defprotocol GraphQuery
-  (select [this tup]))
+  (select [this [S P O]]))
 
 (extend-type Graph GraphQuery
-             (select [this tup]
+             (select [this [S P O]]
                (graph
-                 (let [subj (s tup)
-                       pred (p tup)
-                       obj  (o tup)]
-                   (clojure.set/union
-                     (query this subj pred obj)
-                     (query (graph *context*) subj pred obj))))))
+                 (clojure.set/union
+                   (query this S P O)
+                     (query (graph (current-context)) S P O)))))
 
 (extend-type nil GraphQuery
-             (select [this tup]
-               (graph nil)))
+             (select [this [S P O]]
+               (graph (query (graph (current-context)) S P O))))
 
-(extend-type java.lang.Long GraphQuery
-             (select [this tup]
-               (select (graph this) tup)))
+(extend-type java.util.UUID GraphQuery
+             (select [this [S P O]]
+               (select (graph this) (edge S P O))))
+
+(extend-type clojure.lang.PersistentHashSet GraphQuery
+             (select [this [S P O]]
+               (select (graph this) (edge S P O))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
