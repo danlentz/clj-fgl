@@ -306,7 +306,10 @@
       (util/returning (id g)
         (swap! db #(into % [[(id g) g] [(triples g) g]]))))))
   
-(def ^{:dynamic true} *context* (graph (intern-graph (graph nil))))
+(def ^{:dynamic true}    *context* (graph (intern-graph (graph nil))))
+
+(defn current-context [] *context*)
+
 
 
 (extend-type java.util.UUID GraphBuilder
@@ -326,6 +329,10 @@
 (defmacro with-context [designator & body]
   `(binding [*context* (graph (intern-graph
                                 (& *context* (graph ~designator))))]
+     ~@body))
+
+(defmacro with-null-context [& body]
+  `(binding [*context* +NULL+]
      ~@body))
 
 
