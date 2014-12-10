@@ -210,10 +210,6 @@
              (graph [_]
                (make-graph uuid/+null+ #{})))
 
-(def +null+ uuid/+null+)
-(def +NULL+ (graph nil))
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Incremental Graph (de)Contruction and (de)Indexing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -311,8 +307,14 @@
       (id x)
       (util/returning (id g)
         (swap! db #(into % [[(id g) g] [(edges g) g]]))))))
-  
-(def ^{:dynamic true}    *context* (@db (intern-graph (graph nil))))
+
+
+(def +null+ uuid/+null+)
+(def +NULL+ (graph nil))
+(intern-graph +NULL+)
+
+
+(def ^{:dynamic true}    *context* +NULL+)
 
 (defn current-context [] *context*)
 
@@ -357,7 +359,7 @@
 
 
 
-;; (assert (= (graph *context*) (graph nil) (graph 0)))
+;; (assert (= (graph *context*) (graph nil) (graph +null+)))
 
 ;; (graph #{[1 2 3]})
 ;;  => #<Graph 2d1b48b0-723d-1195-8101-7831c1bbb832 (1 edges)>
@@ -508,9 +510,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn graph-union [g & more]
-  (graph
-    (reduce clojure.set/union
-      (map edges (conj more g)))))
+  (apply & g more))
 
 
 (defn graph-intersection [g & more]
