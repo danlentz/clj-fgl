@@ -335,6 +335,20 @@
   `(binding [*context* +NULL+]
      ~@body))
 
+;; (with-context #{[:fido :isa :dog]}
+;;   (with-context #{[:dog :isa :animal]}
+;;     (select +NULL+ [nil :isa nil])))
+;;
+;;  => #<Graph 69b76850-05c5-1196-9bc3-7831c1bbb832 (2 triples)>
+
+;; (with-context #{[:fido :isa :dog]}
+;;   (with-context #{[:dog :isa :animal]}
+;;     (with-null-context
+;;       (select +NULL+ [nil :isa nil]))))
+;;
+;;  => #<Graph 00000000-0000-0000-0000-000000000000 (0 triples)>
+
+
 
 ;; (assert (= (graph *context*) (graph nil) (graph 0)))
 
