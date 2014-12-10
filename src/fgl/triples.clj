@@ -15,6 +15,11 @@
 (defonce db (atom {}))
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Physical Data Model
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 (defn node? [x]
   (or (nil? x) (uuid/uuid? x)))
 
@@ -24,39 +29,34 @@
   ([x]
      (uuid/the-uuid x)))
 
-;; note: using boxed aritmatic
+(defn edge [S P O]
+  (tuple S P O))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tuple Constituent Accessors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn s [triple]
-  (assert (= (count triple) 3))
-  (nth triple 0))
+(defn s [[S P O]]
+  S)
 
-(defn p [triple]
-  (assert (= (count triple) 3))
-  (nth triple 1))
+(defn p [[S P O]]
+  P)
 
-(defn o [triple]
-  (assert (= (count triple) 3))
-  (nth triple 2))
+(defn o [[S P O]]
+  O)
 
-(defn sp [triple]
-  (assert (= (count triple) 3))
-  (butlast triple))
+(defn sp [[S P O]]
+  (list S P))
 
-(defn po [triple]
-  (assert (= (count triple) 3))
-  (rest triple))
+(defn po [[S P O]]
+  (list P O))
 
-(defn so [triple]
-  (assert (= (count triple) 3))
-  (list (s triple) (o triple)))
+(defn so [[S P O]]
+  (list S O))
 
-(defn spo [triple]
-  (assert (= (count triple) 3))
-  triple)
+(defn spo [[S P O]]
+  (edge S P O))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
