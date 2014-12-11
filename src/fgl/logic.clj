@@ -118,10 +118,28 @@
   [p]
   (cond
     (= '(not) (op p)) (let [p2 (move-not-inwards (arg1 p))]
-                        (if (literal-clause? p2)
-                          p2
-                          (->cnf p2)))
+                        (if (literal-clause? p2) p2 (->cnf p2)))
     (= '(and) (op p)) (conjunction
                         (util/mappend #(conjuncts (->cnf %)) (args p)))
     (= '(or)  (op p)) (merge-disjuncts (map ->cnf (args p)))
     true              p))
+
+(defn ->dnf 
+  "Convert a sentence 'p' to Disjunctive Normal Form.
+  Returns (or (and ...) ...) where each of the disjuncts
+  has literal conjuncts."
+  [p]
+  (cond
+    (= '(not) (op p)) (let [p2 (move-not-inwards (arg1 p))]
+                        (if (literal-clause? p2) p2 (->dnf p2)))
+    (= '(or)  (op p)) (disjunction
+                        (util/mappend #(disjuncts (->dnf %)) (args p)))
+    (= '(and) (op p)) (merge-conjuncts (map ->dnf (args p)))
+    true              p))
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Boolean Form Simplification
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
