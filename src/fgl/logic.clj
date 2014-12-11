@@ -93,12 +93,21 @@
                  x (conjuncts (first disjuncts))]
              (disjunction (concat (disjuncts x) (disjuncts y)))))))
 
-
+(defn move-not-inwards
+  "Given P, return ~P, but with negation moved as far in as possible"
+  [p]
+  (cond
+    (= '(true)  (op p)) false
+    (= '(false) (op p)) true
+    (= '(not)   (op p)) (arg1 p)
+    (= '(and)   (op p)) (disjunction (map move-not-inwards (args p)))
+    (= '(or)    (op p)) (conjunction (map move-not-inwards (args p)))
+    true                (expr 'not p)))
     
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Conjunctive Normal Form
+;; Logical Normal Forms
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
