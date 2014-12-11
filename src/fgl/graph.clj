@@ -462,6 +462,13 @@
              (select [this [S P O]]
                (select (graph this) (edge S P O))))
 
+(defn entity
+  "Return a map describing the properties of node 'x' in graph g
+  in the current dynamic context."
+  [g x]
+  (into {}
+    (mapv (comp vec po) (edges (select g [x nil nil])))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Identity and Context: examples.
@@ -504,6 +511,13 @@
 ;;   => #<Graph 0322eb40-723c-1195-8101-7831c1bbb832 (2 edges)>
 ;;   => #<Graph 0322eb40-723c-1195-8101-7831c1bbb832 (2 edges)>
 
+
+;; (def fido     (graph #{[:x :isa    :dog]
+;;                        [:x :name "fido"]
+;;                        [:x :tag    1234]}))
+;;
+;; (def doghouse (graph #{[:x :in   :texas]}))
+;;
 ;; (with-context fido 
 ;;   (with-context rdfs
 ;;    (map first (edges (select nil [nil :rdf/type :rdfs/Class])))))
@@ -511,8 +525,15 @@
 ;;   => (:rdfs/Container :rdfs/Class :rdfs/Literal :rdf/Bag :rdf/List
 ;;       :rdfs/ContainerMembershipProperty :rdfs/Datatype :rdfs/Resource
 ;;       :rdf/Statement :rdf/Alt :rdf/Seq :rdfs/Property)
-
-
+;;
+;; (entity fido :x)
+;;
+;;   => {:tag 1234, :name "fido", :isa :dog}
+;;
+;; (with-context doghouse
+;;   (entity fido :x))
+;;
+;;   => {:tag 1234, :name "fido", :in :texas, :isa :dog}
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
