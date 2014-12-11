@@ -84,6 +84,11 @@
     (apply merge-with rmerge maps)
     (last maps)))
 
+(defn mappend
+  "maps elements in list and finally appends all resulted lists."
+  [f & seqs]
+  (apply concat (apply map f seqs)))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Namespace Introspection
