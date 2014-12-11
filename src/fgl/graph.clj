@@ -229,7 +229,7 @@
         (->Graph (node) n tups)))))
 
 (defn add-edges 
-  "Efficiently add and index 0 or more edges to an existing graph,
+  "Add and index 0 or more edges to an existing graph,
   returning a new graph as the result."
   [g & more]
   (reduce add-edge g more))
@@ -255,7 +255,7 @@
         (->Graph (node) n tups)))))
 
 (defn del-edges
-  "Efficiently delete and deindex 0 or more edges from an existing graph,
+  "Delete and deindex 0 or more edges from an existing graph,
   returning a new graph as the result."
   [g & more]
   (reduce del-edge g more))
@@ -285,14 +285,14 @@
 
 
 (defn merge-graphs
-  "Efficiently merge 0 or more indexed graphs, returning a new indexed graph"
+  "Merge 0 or more indexed graphs, returning a new indexed graph"
   [& more]
   (if-not (seq (map graph more))
     (graph nil)
     (reduce merge-graph (first more) (rest more))))
 
 (defn & 
-  "Efficiently merge 0 or more indexed graphs, returning a new indexed graph"
+  "Merge 0 or more indexed graphs, returning a new indexed graph"
   [& more]
   (apply merge-graphs more))
 
