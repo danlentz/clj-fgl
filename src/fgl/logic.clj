@@ -3,6 +3,10 @@
   (:refer-clojure :exclude []))
 
 
+
+;;; Algorithm: Peter Norvig, Paradigms of Artificial Intelligence Programming
+;;; Reference: Attila Lendvai, cl-perec
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Syntax
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -140,6 +144,36 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Boolean Form Simplification
+;; Boolean Expression Simplifier
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn simplify-boolean-expression
+  "Perform the following reductions on boolean expression 'form':
+
+  (not false)                -> true
+  (not true)                 -> false
+  (not (not x))              -> x
+  (or)                       -> false
+  (or  x)                    -> x
+  (or  x... false...   y...) -> (or x... y...)
+  (or  x... true...    y...) -> true
+  (or  x... (or y...)  z...) -> (or x... y... z...)
+  (and)                      -> true
+  (and x)                    -> x
+  (and x... true...    y...) -> (and x... y...)
+  (and x... false...   y...) -> false
+  (and x... (and y...) z...) -> (and x... y... z...)
+
+  Where x, y, and z are arbitrary objects, '...' means 0 or more
+  occurances, and true/false means a generalized boolean literal."
+  [form]
+  (letfn [(simplify-args [operator args]
+            (apply concat 
+              (for [arg args]
+                (let [simplified (simplify-boolean-expression arg)]
+                  (if (and (list? simplified)
+                        (= (first simplified) operator))
+                    (rest simplified)
+                    (list simplified))))))]
+    
+    ))
