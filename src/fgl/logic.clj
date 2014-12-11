@@ -1,4 +1,5 @@
 (ns fgl.logic
+  (:require [fgl.util :as util])
   (:refer-clojure :exclude []))
 
 
@@ -110,4 +111,17 @@
 ;; Logical Normal Forms
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
+(defn ->cnf 
+  "Convert a sentence 'p' to Conjunctive Normal Form.
+  Returns (and (or ...) ...) where each of the conjuncts
+  has literal disjuncts."
+  [p]
+  (cond
+    (= '(not) (op p)) (let [p2 (move-not-inwards (arg1 p))]
+                        (if (literal-clause? p2)
+                          p2
+                          (->cnf p2)))
+    (= '(and) (op p)) (conjunction
+                        (util/mappend #(conjuncts (->cnf %)) (args p)))
+    (= '(or)  (op p)) (merge-disjuncts (map ->cnf (args p)))
+    true              p))
