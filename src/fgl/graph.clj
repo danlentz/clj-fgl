@@ -470,6 +470,15 @@
     (mapv (comp vec po) (edges (select g [x nil nil])))))
 
 
+(defn entity-inverse
+  "Return a map describing the properties of things for which 'x'
+  is the object in graph g in the current dynamic context."
+  [g x]
+  (into {}
+  (mapv (comp vec reverse sp) (edges (select g [nil nil x])))))
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Identity and Context: examples.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -526,10 +535,15 @@
 ;;       :rdfs/ContainerMembershipProperty :rdfs/Datatype :rdfs/Resource
 ;;       :rdf/Statement :rdf/Alt :rdf/Seq :rdfs/Property)
 ;;
+
 ;; (entity fido :x)
 ;;
 ;;   => {:tag 1234, :name "fido", :isa :dog}
 ;;
+;; (entity-inverse fido :dog)
+;;
+;;   => {:isa :x}
+
 ;; (with-context doghouse
 ;;   (entity fido :x))
 ;;
