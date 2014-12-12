@@ -32,6 +32,8 @@
 (defn edge [S P O]
   (tuple S P O))
 
+(defn edge? [this]
+  (and (coll? this) (= (count this) 3)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Tuple Constituent Accessors
@@ -59,12 +61,48 @@
   (edge S P O))
 
 
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Graph / GraphContainer Protocol
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defrecord Graph [id index edges])
+(definterface IGraphStore
+  (getId       [])
+  (getIndex    [])
+  (getEdges    []))
 
+(declare select)
+
+(defn- invoke-select [g thing]
+  (if (edge? thing)
+    (select g thing)
+    (select g (edge thing nil nil))))
+
+
+(deftype Graph [id index edges]
+
+  IGraphStore
+
+  (getId [this]
+    id)
+  (getIndex [this]
+    index)
+  (getEdges [this]
+    edges)
+
+  clojure.lang.IFn
+
+  (invoke [this vertex-or-generalized-edge]
+    (invoke-select this vertex-or-generalized-edge))
+  (invoke [this vertex-or-generalized-edge default]
+    (let [result (invoke-select this vertex-or-generalized-edge)]
+      (if (seq? (.getEdges result))
+        result
+        default))))
+  
+  
 (defprotocol GraphContainer
   (id       [this])
   (index    [this])
@@ -72,11 +110,11 @@
 
 (extend-type Graph GraphContainer
              (id [this]
-               (:id this))
+               (.getId this))
              (index [this]
-               (:index this))
+               (.getIndex this))
              (edges [this]
-               (:edges this)))
+               (.getEdges this)))
 
 
 (defmethod print-method Graph [g ^java.io.Writer w]
@@ -519,8 +557,9 @@
 ;;   => #<Graph 0322eb40-723c-1195-8101-7831c1bbb832 (2 edges)>
 ;;   => #<Graph 0322eb40-723c-1195-8101-7831c1bbb832 (2 edges)>
 ;;   => #<Graph 0322eb40-723c-1195-8101-7831c1bbb832 (2 edges)>
+;;
 
-
+;;;
 ;; (def fido     (graph #{[:x :isa    :dog]
 ;;                        [:x :name "fido"]
 ;;                        [:x :tag    1234]}))
@@ -535,7 +574,7 @@
 ;;       :rdfs/ContainerMembershipProperty :rdfs/Datatype :rdfs/Resource
 ;;       :rdf/Statement :rdf/Alt :rdf/Seq :rdfs/Property)
 ;;
-
+;;;
 ;; (entity fido :x)
 ;;
 ;;   => {:tag 1234, :name "fido", :isa :dog}
@@ -543,15 +582,38 @@
 ;; (entity-inverse fido :dog)
 ;;
 ;;   => {:isa :x}
-
+;;
 ;; (with-context doghouse
 ;;   (entity fido :x))
 ;;
 ;;   => {:tag 1234, :name "fido", :in :texas, :isa :dog}
+;;;
+
+;;;
+;;  Finally, Graphs are themselves functions which look up their arguments
+;; using context-sensitive select.  In other words, dynamic functions.
+;; Graphs can be invoked on atomic literals, such or keywords or URL's,
+;; to return a (context-enhanced) graph of all edges eminating from that
+;; vertex.  Or, graphs can be invoked on a generalized edge query to
+;; return the result graph, just as 'select'
+;;
+;; (edges (fido :x))
+;;
+;;   => #{[:x :tag 1234] [:x :name "fido"] [:x :isa :dog]}
+;;
+;; (edges (fido [:x :isa nil]))
+;;
+;;   => #{[:x :isa :dog]}
+;;
+;; (with-context doghouse
+;;   (fido :x))
+;;
+;;   => #<Graph e7e60e00-079d-1196-a4d0-7831c1bbb832 (4 edges)>
+;;;
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Graph Operations
+;; Graph Operations (basic implementation)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn graph-union [g & more]
