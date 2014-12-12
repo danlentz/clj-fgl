@@ -92,6 +92,11 @@
   (getEdges [this]
     edges)
 
+  clojure.lang.Seqable
+
+  (seq [this]
+    (seq edges))
+
   clojure.lang.IFn
 
   (invoke [this vertex-or-generalized-edge]
@@ -609,6 +614,10 @@
 ;;   (fido :x))
 ;;
 ;;   => #<Graph e7e60e00-079d-1196-a4d0-7831c1bbb832 (4 edges)>
+;;
+;; (fido nil)
+;;
+;;   => #<Graph 537d9560-079f-1196-a4d0-7831c1bbb832 (3 edges)>
 ;;;
 
 
