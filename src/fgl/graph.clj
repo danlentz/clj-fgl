@@ -62,8 +62,6 @@
 
 
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Graph / GraphContainer Protocol
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -73,7 +71,7 @@
   (getIndex    [])
   (getEdges    []))
 
-(declare select)
+(declare select graph-equal? add-edges del-edges)
 
 (defn- invoke-select [g thing]
   (if (edge? thing)
@@ -81,21 +79,60 @@
     (select g (edge thing nil nil))))
 
 
-(deftype Graph [id index edges]
+(deftype Graph [^java.util.UUID id
+                index
+                edges]
 
   IGraphStore
 
-  (getId [this]
+  (getId    [_]
     id)
-  (getIndex [this]
+  (getIndex [_]
     index)
-  (getEdges [this]
+  (getEdges [_]
     edges)
 
+  java.lang.Object
+
+  (hashCode [_]
+    (bit-xor
+      (.hashCode edges)
+      (.hashCode index)))
+  (equals [this other]
+    (graph-equal? this other))
+  (toString [_]
+    (.toString edges))
+
+  java.util.Set
+
+  (size     [_]
+    (count edges))
+  (isEmpty  [_]
+    (empty? edges))
+  (iterator [_]
+    (clojure.lang.SeqIterator. (seq edges)))
+  (containsAll [_ things]
+    (every? #(contains? edges %) things))
+  
   clojure.lang.Seqable
 
-  (seq [this]
-    (seq edges))
+  (seq [_]
+    (map #(apply tuple %) (seq edges)))
+   
+  clojure.lang.IPersistentSet
+
+  (equiv [this other]
+    (graph-equal? this other))
+  (count [_]
+    (count edges))
+  (empty [_]
+    (@db uuid/+null+))
+  (contains [_ edge-tuple]
+    (contains? edges edge-tuple))
+  (disjoin [this edge-tuple]
+    (del-edges this edge-tuple))
+  (cons [this edge-tuple]
+    (add-edges this edge-tuple))
 
   clojure.lang.IFn
 
@@ -244,6 +281,10 @@
 (extend-type clojure.lang.PersistentList GraphBuilder
              (graph [this]
                (graph (set this))))
+
+(extend-type clojure.lang.LazySeq GraphBuilder
+             (graph [this]
+               (graph (vec this))))
 
 (extend-type clojure.lang.PersistentVector GraphBuilder
              (graph [this]
