@@ -700,7 +700,6 @@
 ;;
 ;;;
 
-
 ;;;
 ;;
 ;; Mapping over sequential queries:
