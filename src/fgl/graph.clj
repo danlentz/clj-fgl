@@ -636,12 +636,13 @@
 ;;;
 
 ;;;
-;;  Finally, Graphs are themselves functions which look up their arguments
+;;  Graphs are themselves functions which look up their arguments
 ;; using context-sensitive select.  In other words, dynamic functions.
 ;; Graphs can be invoked on atomic literals, such or keywords or URL's,
 ;; to return a (context-enhanced) graph of all edges eminating from that
 ;; vertex.  Or, graphs can be invoked on a generalized edge query to
 ;; return the result graph, just as 'select'
+;;
 ;;
 ;; (edges (fido :x))
 ;;
@@ -661,10 +662,67 @@
 ;;   => #<Graph 537d9560-079f-1196-a4d0-7831c1bbb832 (3 edges)>
 ;;;
 
+;;;
+;;  Graphs work just like you would expect with many common Clojure
+;;  functions by implementing many interfaces, such as
+;;  clojure.lang.PersistentSet.
+;;
+;;
+;; (seq fido)
+;;   => ([:x :tag 1234] [:x :name "fido"] [:x :isa :dog])
+;;
+;; (first fido)
+;;   => [:x :tag 1234]
+;;
+;; (rest fido)
+;;   => ([:x :name "fido"] [:x :isa :dog])
+;;
+;; (count fido)
+;;   => 3
+;;
+;; (= fido (graph (seq fido)))
+;;   => true
+;;
+;; (conj fido [:x :said "woof!"])
+;;   => #<Graph 4d7b1c50-07c2-1196-a4d0-7831c1bbb832 (4 edges)>
+;;
+;; (seq (conj fido [:x :said "woof!"]))
+;;   => ([:x :said "woof!"] [:x :tag 1234] [:x :name "fido"] [:x :isa :dog])
+;;
+;; (contains? fido [:x :isa :dog])
+;;   => true
+;;
+;; (contains? fido [:x :isa :cat])
+;;   => false
+;;
+;; (map type fido)
+;;   => (clj_tuple.Tuple3 clj_tuple.Tuple3 clj_tuple.Tuple3)
+;;
+;;;
+
+
+;;;
+;;
+;; Mapping over sequential queries:
+;;
+;; (mapcat fido [[nil :isa nil][nil :tag nil]])
+;;   => ([:x :isa :dog] [:x :tag 1234])
+;;
+;;
+;; Reduce the graph to the set of unique nodes:
+;;
+;; (reduce into #{} fido)
+;;   => #{"fido" 1234 :isa :name :dog :x :tag}
+;;
+;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Graph Operations (basic implementation)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(defn graph-nodes [g]
+  (reduce into #{} g))
 
 (defn graph-union [g & more]
   (apply & g more))
