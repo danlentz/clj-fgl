@@ -1,0 +1,15 @@
+;;;
+;;; Small Graph for Play
+;;;
+
+#{
+  [:x    :isa  :dog]
+  [:dog  :type :animal]
+  [:x    :name "fido"]
+  [:x    :tag  1234]
+  [:x    :says "woof!"]
+  [:y    :isa  :cat]
+  [:cat  :type :animal]
+  [:y    :name "fritz"]
+  [:y    :says "wow, man"]
+  [:type :type :type]}
