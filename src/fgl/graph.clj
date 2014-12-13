@@ -4,6 +4,7 @@
   (:require [clojure.core.reducers :as r])
   (:require [fgl.util  :as util])
   (:require [fgl.diff  :as diff])
+  (:require [fgl.edn   :as fedn])
   (:require [clj-uuid  :as uuid])
   (:use     [clj-tuple]))
 
@@ -294,6 +295,21 @@
              (graph [_]
                (make-graph uuid/+null+ #{})))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Schema Convenience
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(defn schema [designator]
+  (graph (fedn/edn-resource-value designator)))
+
+
+;; (schema :rdfs)
+;;
+;;  => #<Graph 674ce640-085d-1196-a4d0-7831c1bbb832 (71 edges)>
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Incremental Graph (de)Contruction and (de)Indexing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -546,11 +562,18 @@
              (select [this [S P O]]
                (select (graph this) (edge S P O))))
 
+(defn- collect-properties [m [k v]]
+  (let [existing (m k)]
+    (cond
+      (nil? existing)       (assoc m k v)
+      (not (set? existing)) (assoc m k #{existing v})
+      true                  (assoc m k (conj existing v)))))
+    
 (defn entity
   "Return a map describing the properties of node 'x' in graph g
   in the current dynamic context."
   [g x]
-  (into {}
+  (reduce collect-properties {}
     (mapv (comp vec po) (edges (select g [x nil nil])))))
 
 
@@ -558,8 +581,8 @@
   "Return a map describing the properties of things for which 'x'
   is the object in graph g in the current dynamic context."
   [g x]
-  (into {}
-  (mapv (comp vec reverse sp) (edges (select g [nil nil x])))))
+  (reduce collect-properties {}
+    (mapv (comp vec reverse sp) (edges (select g [nil nil x])))))
 
 
 
@@ -633,7 +656,24 @@
 ;;   (entity fido :x))
 ;;
 ;;   => {:tag 1234, :name "fido", :in :texas, :isa :dog}
+;;
+;; (with-context #{[:x :isa :animal]}
+;;   (entity fido :x))
+;;
+;;   => {:name "fido", :tag 1234, :isa #{:dog :animal}}
+;;
+;; (entity-inverse (schema :rdfs) :rdfs/Class)
+;;
+;;   => {:rdfs/domain     :rdfs/subClassOf,
+;;       :rdfs/subClassOf :rdfs/Datatype,
+;;       :rdf/type        #{:rdfs/Property :rdf/List :rdf/Alt :rdfs/Container
+;;                          :rdfs/Datatype :rdfs/ContainerMembershipProperty
+;;                          :rdf/Statement :rdf/Bag :rdfs/Resource :rdfs/Class
+;;                          :rdf/Seq :rdfs/Literal},
+;;       :rdfs/range      #{:rdfs/domain :rdf/type :rdfs/subClassOf
+;;                          :rdfs/range}}
 ;;;
+
 
 ;;;
 ;;  Graphs are themselves functions which look up their arguments
@@ -702,7 +742,7 @@
 
 ;;;
 ;;
-;; Mapping over sequential queries:
+;; Mapping like function over sequential generalized edge queries:
 ;;
 ;; (mapcat fido [[nil :isa nil][nil :tag nil]])
 ;;   => ([:x :isa :dog] [:x :tag 1234])
